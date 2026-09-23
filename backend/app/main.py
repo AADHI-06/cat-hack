@@ -11,6 +11,7 @@ Run locally:
 from fastapi import FastAPI
 
 from app import __version__
+from app.api import api_router
 
 app = FastAPI(
     title="CAT Smart Operator Assistant",
@@ -37,3 +38,7 @@ def root():
 def health():
     """Liveness probe for local development and tests."""
     return {"status": "healthy"}
+
+
+# Platform API routes (Claude B): /api/...
+app.include_router(api_router)
