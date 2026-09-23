@@ -1,0 +1,12 @@
+# Module 2 (task duration prediction) training dependencies.
+#
+# Deliberately separate from backend/requirements.txt, which is a SHARED file.
+# The backend does not need these until model serving is integrated in a later
+# coordinated module.
+#
+# Install:  pip install -r ml/requirements.txt
+
+numpy==2.2.1
+pandas==2.2.3
+scikit-learn==1.6.1
+joblib==1.4.2

@@ -21,7 +21,7 @@ Development model: two Claude accounts in parallel. **Claude A** owns Core/AI,
 |---|---|---|---|---|---|---|
 | 0 Foundation | Claude A | Complete | 3 passed | Approved | e09dab1 | Yes |
 | 1 Synthetic Data | Claude A | In Progress | 50 passed | Pending | - | No |
-| 2 Task Prediction | Claude A | Not Started | - | - | - | No |
+| 2 Task Prediction | Claude A | In Progress | 55 passed | Pending | - | No |
 | 3 Optimization | Claude A | Not Started | - | - | - | No |
 | 4 Safety | Claude A | Not Started | - | - | - | No |
 | 5 Anomaly Detection | Claude A | Not Started | - | - | - | No |
@@ -146,6 +146,77 @@ contract, and Claude B needs it for persistence.
 
 ---
 
+## Module 2 - Task Duration Prediction
+
+**Owner:** Claude A
+**Branch:** `feature/core-ai`
+**Status:** In Progress - implemented and verified, awaiting human approval.
+Not committed, not pushed.
+**Tests:** 55 passed (`ml/tests/`). Full suite 108 passed (3 Module 0 + 50
+Module 1 + 55 Module 2). Module 1's 138 validation checks still pass.
+
+Full documentation: `docs/task_duration_model.md`
+
+Files created:
+
+| File | Purpose |
+|------|---------|
+| `ml/requirements.txt` | numpy, pandas, scikit-learn, joblib - deliberately separate from the shared `backend/requirements.txt` |
+| `ml/__init__.py` | package marker |
+| `ml/features.py` | feature lists, leakage guards, preprocessor builder |
+| `ml/data.py` | loading, joining, chronological split |
+| `ml/training/__init__.py` | package marker |
+| `ml/training/train_task_duration.py` | training entrypoint + CLI |
+| `ml/predict.py` | contract-shaped `predict()` - pure function, no HTTP, no DB |
+| `ml/tests/__init__.py` | test package |
+| `ml/tests/test_task_duration.py` | 55 tests |
+| `docs/task_duration_model.md` | target, features, leakage, split, metrics, uncertainty, limitations |
+
+Artifacts written to `ml/models/` (gitignored, reproducible from seed 42):
+`task_duration_model.joblib`, `task_duration_metadata.json`,
+`feature_importance.json`.
+
+Target: `actual_minutes`, raw minutes, no transform. 15 features
+(4 categorical, 11 numeric). `shift` dropped and `weather` excluded by
+decision; `telemetry.*`, `machines.engine_hours`, `completed_at`,
+`safety_events.*` and all identifiers excluded as leakage.
+
+Split (chronological by `shift_date`, hardcoded boundaries): train 1797
+(2026-03-27..2026-07-11), validation 598 (2026-07-12..2026-08-16), test 605
+(2026-08-17..2026-09-23). Zero `task_id` overlap between splits.
+
+Measured **test** metrics - synthetic data only, no real-world claim:
+
+| Model | MAE | RMSE | R2 | MAPE |
+|---|---:|---:|---:|---:|
+| Baseline 0 - planner estimate | 53.49 | 71.50 | 0.7264 | 18.62% |
+| Baseline 1 - train mean | 108.05 | 136.84 | -0.0020 | 56.32% |
+| Baseline 2 - Linear Regression | 23.15 | 30.47 | 0.9503 | 10.08% |
+| RF validation-selected (not shipped) | 22.38 | 30.40 | 0.9505 | 8.61% |
+| **RF compact (shipped, final)** | **22.57** | **30.70** | **0.9496** | **8.66%** |
+| Ablation - RF compact without estimate | 29.31 | 39.88 | 0.9149 | 11.62% |
+
+Artifact configuration - both recorded, compact one shipped by human decision:
+
+| | Validation-selected | Deployment (shipped) |
+|---|---|---|
+| params | 400 trees, min_samples_leaf=1 | **200 trees, min_samples_leaf=4** |
+| test MAE | 22.38 | 22.57 |
+| artifact | 65,250,234 B (65.25 MB) | **6,686,970 B (6.69 MB)** |
+
+Measured tradeoff: +0.1863 min test MAE (~11 s) for a 9.76x smaller artifact.
+
+Uncertainty: multiplicative residual quantiles from the compact model's own
+validation residuals, x0.8753..x1.1512, nominal 80%, **measured coverage
+validation 79.93%, test 78.68%**.
+
+Explicitly out of scope: nothing placed in `backend/app/`; no optimizer, no
+safety engine, no anomaly detector, no API, no database layer, no frontend.
+Shared `backend/requirements.txt` not touched, `docs/contracts.md` not
+modified.
+
+---
+
 ## Change Log
 
 | Date | Module | Owner | Entry |
@@ -155,3 +226,6 @@ contract, and Claude B needs it for persistence.
 | 2026-09-23 | 0 | Claude A | Module 0 approved by human reviewer. Committed as `e09dab1` (root commit, 20 files, 2033 insertions) and pushed to `origin/main`. Module 0 marked Complete. |
 | 2026-09-23 | 1 | Claude A | Branch `feature/core-ai` created from `origin/main` at `4c3a771`. Synthetic data generation implemented in `scripts/data_generation/`: 6 datasets, seed 42, 138 validation checks, 50 tests. Not committed - awaiting approval. |
 | 2026-09-23 | 1 | Claude A | Fixed during verification: (1) engine-hour readings accumulated in start order but stamped at completion, making them non-monotonic in time - now accumulated in completion order; (2) safety-event rates lowered so events stay rare (13.8% -> 8.9% of executions). |
+| 2026-09-23 | 1 | Claude A | Module 1 approved. Committed as `ab2bb58` and pushed to `origin/feature/core-ai`. Branch upstream repointed from `origin/main` to `origin/feature/core-ai`. |
+| 2026-09-23 | 2 | Claude A | Task duration prediction implemented in `ml/`. 15 features, chronological split, Random Forest selected on validation MAE. Test MAE 22.38 vs planner baseline 53.49. 49 tests pass. Not committed - awaiting approval. |
+| 2026-09-23 | 2 | Claude A | Artifact decision applied: shipped the compact Random Forest (200 trees, min_samples_leaf=4) instead of the validation-MAE winner. 6.69 MB vs 65.25 MB for +0.1863 min test MAE. Both configurations trained, scored and recorded in the metadata. Retrained end to end, interval recalibrated, docs updated. 55 tests pass (108 full suite). Not committed - awaiting approval. |
