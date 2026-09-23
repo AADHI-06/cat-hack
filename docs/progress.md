@@ -20,7 +20,7 @@ Development model: two Claude accounts in parallel. **Claude A** owns Core/AI,
 | Module | Owner | Status | Tests | Human Approval | Commit | Integrated |
 |---|---|---|---|---|---|---|
 | 0 Foundation | Claude A | Complete | 3 passed | Approved | e09dab1 | Yes |
-| 1 Synthetic Data | Claude A | Not Started | - | - | - | No |
+| 1 Synthetic Data | Claude A | In Progress | 50 passed | Pending | - | No |
 | 2 Task Prediction | Claude A | Not Started | - | - | - | No |
 | 3 Optimization | Claude A | Not Started | - | - | - | No |
 | 4 Safety | Claude A | Not Started | - | - | - | No |
@@ -99,6 +99,53 @@ integration, and any dependency beyond FastAPI, Uvicorn, pytest and httpx.
 
 ---
 
+## Module 1 - Synthetic Data Generation
+
+**Owner:** Claude A
+**Branch:** `feature/core-ai`
+**Status:** In Progress - implemented and verified, awaiting human approval.
+Not committed, not pushed.
+**Tests:** 50 passed (`scripts/data_generation/tests/`), plus 138 validation
+checks via `python -m scripts.data_generation.validate`. Module 0's 3 tests
+still pass (53 total).
+
+Files created:
+
+| File | Purpose |
+|------|---------|
+| `scripts/__init__.py` | package marker |
+| `scripts/data_generation/__init__.py` | package marker |
+| `scripts/data_generation/config.py` | seed, sizes, vocabularies, multipliers, thresholds |
+| `scripts/data_generation/generate.py` | the generator + CLI |
+| `scripts/data_generation/validate.py` | 138 validation checks + CLI |
+| `scripts/data_generation/tests/__init__.py` | test package |
+| `scripts/data_generation/tests/test_data_generation.py` | 50 tests |
+| `docs/synthetic_data.md` | column-level schema source for Claude B |
+
+Datasets written to `data/generated/` (gitignored - regenerate with seed 42):
+`operators.csv` 40, `machines.csv` 25, `tasks.csv` 200, `task_history.csv`
+3000, `telemetry.csv` 3000, `safety_events.csv` 272, plus `manifest.json`.
+
+Verification performed:
+
+- generator executed; all 6 CSVs + manifest written
+- 138/138 validation checks pass
+- 50/50 pytest tests pass; Module 0 unaffected (53 total)
+- reproducibility: two independent runs at seed 42 are byte-identical (SHA-256 per file)
+- seed sensitivity: seed 7 produces different data, and still passes every data check
+- two generator issues found and fixed during verification (see change log)
+
+Explicitly out of scope: no ML model, no optimizer, no safety engine, no
+anomaly detector, no API, no database layer, no frontend. No new dependencies
+(pure standard library), so `backend/requirements.txt` was not touched.
+
+Open item for the coordinator: `docs/synthetic_data.md` section 11 names the
+synthetic-marker column (`data_source`), which `docs/contracts.md` section 7
+left unnamed. This is an addition rather than a change to an approved
+contract, and Claude B needs it for persistence.
+
+---
+
 ## Change Log
 
 | Date | Module | Owner | Entry |
@@ -106,3 +153,5 @@ integration, and any dependency beyond FastAPI, Uvicorn, pytest and httpx.
 | 2026-09-23 | 0 | Claude A | Foundation scaffolded and verified locally. Not committed. |
 | 2026-09-23 | 0 | Claude A | Documentation updated for two-Claude parallel development: ownership map, shared-file protocol, branch strategy, 7-step module workflow, module ownership roadmap, integration rules. Added `docs/contracts.md`. Renamed default branch `master` -> `main`. Still not committed - awaiting approval. |
 | 2026-09-23 | 0 | Claude A | Module 0 approved by human reviewer. Committed as `e09dab1` (root commit, 20 files, 2033 insertions) and pushed to `origin/main`. Module 0 marked Complete. |
+| 2026-09-23 | 1 | Claude A | Branch `feature/core-ai` created from `origin/main` at `4c3a771`. Synthetic data generation implemented in `scripts/data_generation/`: 6 datasets, seed 42, 138 validation checks, 50 tests. Not committed - awaiting approval. |
+| 2026-09-23 | 1 | Claude A | Fixed during verification: (1) engine-hour readings accumulated in start order but stamped at completion, making them non-monotonic in time - now accumulated in completion order; (2) safety-event rates lowered so events stay rare (13.8% -> 8.9% of executions). |
