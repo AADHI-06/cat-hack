@@ -19,7 +19,7 @@ Development model: two Claude accounts in parallel. **Claude A** owns Core/AI,
 
 | Module | Owner | Status | Tests | Human Approval | Commit | Integrated |
 |---|---|---|---|---|---|---|
-| 0 Foundation | Claude A | In Progress | 3 passed | Pending | - | No |
+| 0 Foundation | Claude A | Complete | 3 passed | Approved | e09dab1 | Yes |
 | 1 Synthetic Data | Claude A | Not Started | - | - | - | No |
 | 2 Task Prediction | Claude A | Not Started | - | - | - | No |
 | 3 Optimization | Claude A | Not Started | - | - | - | No |
@@ -33,8 +33,10 @@ Development model: two Claude accounts in parallel. **Claude A** owns Core/AI,
 | 11 Integration | A + B | Not Started | - | - | - | No |
 | 12 Final QA/Demo | A + B | Not Started | - | - | - | No |
 
-**Module 0 is NOT complete.** It stays `In Progress` until explicit human
-approval, after which it is committed and only then marked `Complete`.
+Module 0 was approved by the human reviewer on 2026-09-23, committed as
+`e09dab1` and pushed to `main`. It is the base commit both feature branches
+derive from. No other module may be marked `Complete` before the same
+approval step.
 
 Modules 6, 10, 11 and 12 are coordinated/joint. They require the coordinator
 to sequence work so both Claudes never edit the same files at once.
@@ -58,8 +60,9 @@ require explicit human authorization.
 ## Module 0 - Foundation
 
 **Owner:** Claude A
-**Status:** In Progress - implemented, documented and verified, awaiting human
-approval. Not committed, not pushed.
+**Status:** Complete - approved by the human reviewer, committed and pushed.
+**Commit:** `e09dab1` (`e09dab181124442565ce45876040a079a4238693`) on `main`
+**Pushed:** origin/main, 20 files, 2033 insertions
 **Tests:** 3 passed (`backend/tests/test_foundation.py`)
 
 Files created:
@@ -102,3 +105,4 @@ integration, and any dependency beyond FastAPI, Uvicorn, pytest and httpx.
 |------------|--------|----------|-------|
 | 2026-09-23 | 0 | Claude A | Foundation scaffolded and verified locally. Not committed. |
 | 2026-09-23 | 0 | Claude A | Documentation updated for two-Claude parallel development: ownership map, shared-file protocol, branch strategy, 7-step module workflow, module ownership roadmap, integration rules. Added `docs/contracts.md`. Renamed default branch `master` -> `main`. Still not committed - awaiting approval. |
+| 2026-09-23 | 0 | Claude A | Module 0 approved by human reviewer. Committed as `e09dab1` (root commit, 20 files, 2033 insertions) and pushed to `origin/main`. Module 0 marked Complete. |
