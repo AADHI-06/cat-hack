@@ -1,0 +1,9 @@
+# Module 0 foundation dependencies only.
+# Additional libraries (pandas, numpy, scikit-learn, xgboost) are added
+# in the module that first needs them.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Test dependencies
+pytest==8.3.4
+httpx==0.28.1

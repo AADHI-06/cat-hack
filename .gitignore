@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated / derived data (regenerate with a fixed seed instead of committing)
+data/generated/*
+!data/generated/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Trained model artifacts
+ml/models/*
+!ml/models/.gitkeep
+*.pkl
+*.joblib
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
